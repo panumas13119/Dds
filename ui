@@ -1,294 +1,223 @@
 local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
 
 local LP = Players.LocalPlayer
-local PG = LP:WaitForChild("PlayerGui")
+local PlayerGui = LP:WaitForChild("PlayerGui")
 
--- destroy old copies
-local old = PG:FindFirstChild("PixiemoGUI")
-if old then old:Destroy() end
-
-local function tweenHover(ui, baseSize)
-	if not ui or not ui:IsA("GuiObject") then return end
-	ui.MouseEnter:Connect(function()
-		TweenService:Create(ui, TweenInfo.new(0.12, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-			Size = baseSize + UDim2.fromOffset(6,4)
-		}):Play()
-	end)
-	ui.MouseLeave:Connect(function()
-		TweenService:Create(ui, TweenInfo.new(0.12, Enum.EasingStyle.Sine, Enum.EasingDirection.Out), {
-			Size = baseSize
-		}):Play()
-	end)
+--// Small helper to ensure SetCore is ready
+local function waitForSetCore()
+    local ok = false
+    repeat
+        ok = pcall(function()
+            StarterGui:SetCore("SendNotification", { Title = " "; Text = " "; Duration = 0.01 })
+        end)
+        if not ok then task.wait(0.25) end
+    until ok
 end
 
--- Root
+task.spawn(waitForSetCore)
+
+--// Simple notification queue (prevents overlap)
+local notifQueue = {}
+local isNotifying = false
+
+local function notify(title, text, duration)
+    table.insert(notifQueue, {Title = title, Text = text, Duration = duration or 4})
+    if isNotifying then return end
+    isNotifying = true
+    while #notifQueue > 0 do
+        local n = table.remove(notifQueue, 1)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", n)
+        end)
+        task.wait(n.Duration + 0.05)
+    end
+    isNotifying = false
+end
+
+--// Gui factory helpers
+local function uiCorner(parent, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r or 12)
+    c.Parent = parent
+    return c
+end
+
+local function uiStroke(parent, thickness, color)
+    local s = Instance.new("UIStroke")
+    s.Thickness = thickness or 1
+    s.Color = color or Color3.fromRGB(255,255,255)
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = parent
+    return s
+end
+
+--// Root ScreenGui
 local gui = Instance.new("ScreenGui")
-gui.Name = "PixiemoGUI"
+gui.Name = "ADMTradeScamGUI"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
-gui.Parent = PG
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = PlayerGui
 
--- Minimized pill
-local pill = Instance.new("TextButton")
-pill.Name = "PixiemoPill"
-pill.Text = "Pixiemo Hub"
-pill.Size = UDim2.fromOffset(160, 32)
-pill.Position = UDim2.new(1, -170, 0, 12)
-pill.BackgroundColor3 = Color3.fromRGB(134,185,112)
-pill.TextColor3 = Color3.new(1,1,1)
-pill.TextSize = 18
-pill.Visible = false
-pill.Parent = gui
-do
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(1,0); uc.Parent = pill
-	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(80,110,70); st.Thickness=2; st.Parent = pill
-end
+--// Root container (outer)
+local outer = Instance.new("Frame")
+outer.Size = UDim2.fromOffset(308, 188)
+outer.Position = UDim2.new(0.5, -154, 0.5, -94)
+outer.BackgroundColor3 = Color3.fromRGB(0,0,0)
+outer.BorderSizePixel = 0
+outer.Parent = gui
+uiCorner(outer, 18)
+uiStroke(outer, 1, Color3.fromRGB(60,60,60))
 
--- Window
-local win = Instance.new("Frame")
-win.Size = UDim2.fromOffset(420, 330)
-win.Position = UDim2.new(0.5, 0, 0.5, 0)
-win.AnchorPoint = Vector2.new(0.5, 0.5)
-win.BackgroundColor3 = Color3.fromRGB(195,235,185)
-win.Parent = gui
-do
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,24); uc.Parent = win
-	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(150,190,130); st.Thickness=3; st.Parent = win
-end
+--// Inner panel
+local panel = Instance.new("Frame")
+panel.Size = UDim2.fromOffset(300, 180)
+panel.Position = UDim2.fromOffset(4, 4)
+panel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+panel.BorderSizePixel = 0
+panel.Parent = outer
+uiCorner(panel, 15)
 
--- Header (draggable)
-local header = Instance.new("Frame")
-header.Size = UDim2.new(1,0,0,36)
-header.BackgroundColor3 = Color3.fromRGB(134,185,112)
-header.Active = true
-header.Parent = win
-do
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,24); uc.Parent = header
-end
-
+--// Title
 local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.fromOffset(0, 5)
 title.BackgroundTransparency = 1
-title.Size = UDim2.fromScale(1,1)
-title.Text = "  Pixiemo Hub"
-title.TextColor3 = Color3.new(1,1,1)
+title.Text = "GAG TRADE SCAM"
+title.Font = Enum.Font.FredokaOne -- keep as in the original
 title.TextSize = 22
-title.Font = Enum.Font.GothamBold
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Parent = header
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextStrokeTransparency = 0.1
+title.TextStrokeColor3 = Color3.fromRGB(255,0,0)
+title.Parent = panel
 
-local minimize = Instance.new("TextButton")
-minimize.Size = UDim2.fromOffset(22,22)
-minimize.Position = UDim2.new(1, -14 - 22, 0.5, -11)
-minimize.BackgroundColor3 = Color3.fromRGB(255,212,59)
-minimize.Text = ""
-minimize.Parent = header
+--// Subtitle / credit
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, 0, 0, 20)
+credit.Position = UDim2.fromOffset(0, 30)
+credit.BackgroundTransparency = 1
+credit.Text = "made by V3xado"
+credit.Font = Enum.Font.FredokaOne
+credit.TextSize = 18
+credit.TextColor3 = Color3.fromRGB(255,255,255)
+credit.TextStrokeTransparency = 0.1
+credit.TextStrokeColor3 = Color3.fromRGB(191,129,255)
+credit.Parent = panel
+
+--// Main button: Anti Ban Bypass (visual only)
+local bypassBtn = Instance.new("TextButton")
+bypassBtn.Size = UDim2.new(0.8, 0, 0, 40)
+bypassBtn.Position = UDim2.new(0.1, 0, 0, 60)
+bypassBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+bypassBtn.TextColor3 = Color3.fromRGB(255,255,255)
+bypassBtn.TextStrokeColor3 = Color3.fromRGB(255,255,255)
+bypassBtn.TextStrokeTransparency = 0.1
+bypassBtn.Font = Enum.Font.FredokaOne
+bypassBtn.TextSize = 22
+bypassBtn.Text = "ANTI BAN BYPASS ☠️"
+bypassBtn.AutoButtonColor = true
+bypassBtn.Parent = panel
+uiCorner(bypassBtn, 10)
+uiStroke(bypassBtn, 1, Color3.fromRGB(90,90,90))
+
+--// Info label
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, 0, 0, 20)
+info.Position = UDim2.fromOffset(0, 105)
+info.BackgroundTransparency = 1
+info.Text = "**Must be on trade before using!**"
+info.Font = Enum.Font.FredokaOne
+info.TextSize = 16
+info.TextColor3 = Color3.fromRGB(255,255,255)
+info.TextStrokeTransparency = 0.1
+info.TextStrokeColor3 = Color3.fromRGB(120,120,120)
+info.Parent = panel
+
+--// Buttons: ON / OFF
+local onBtn = Instance.new("TextButton")
+onBtn.Size = UDim2.fromOffset(100, 40)
+onBtn.Position = UDim2.new(0.12, 0, 1, -45)
+onBtn.BackgroundColor3 = Color3.fromRGB(200,200,200)
+onBtn.TextColor3 = Color3.fromRGB(255,255,255)
+onBtn.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+onBtn.TextStrokeTransparency = 0.1
+onBtn.Font = Enum.Font.FredokaOne
+onBtn.TextSize = 24
+onBtn.Text = "ON"
+onBtn.Parent = panel
+uiCorner(onBtn, 15)
+
+local offBtn = Instance.new("TextButton")
+offBtn.Size = UDim2.fromOffset(100, 40)
+offBtn.Position = UDim2.new(0.55, 0, 1, -45)
+offBtn.BackgroundColor3 = Color3.fromRGB(200,200,200)
+offBtn.TextColor3 = Color3.fromRGB(255,255,255)
+offBtn.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+offBtn.TextStrokeTransparency = 0.1
+offBtn.Font = Enum.Font.FredokaOne
+offBtn.TextSize = 24
+offBtn.Text = "OFF"
+offBtn.Parent = panel
+uiCorner(offBtn, 15)
+
+--// Button logic
+bypassBtn.MouseButton1Click:Connect(function()
+    notify("Bypass Ban Activated", "Bypass Any Ban! (visual notification only)", 4)
+end)
+
+onBtn.MouseButton1Click:Connect(function()
+    -- Keep original phrasing but ensure "Activated" shows clearly
+    notify("Freeze Trade: Activated", "You can now click accept!", 4)
+end)
+
+offBtn.MouseButton1Click:Connect(function()
+    notify("Script Turned Off", "Script is now off.", 4)
+end)
+
+--// Smooth drag for the window (works on mouse and touch)
 do
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(1,0); uc.Parent = minimize
+    local dragging = false
+    local dragStart, startPos
+
+    local function update(input)
+        if not dragging or not dragStart or not startPos then return end
+        local delta = input.Position - dragStart
+        outer.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+
+    outer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = outer.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    outer.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+            update(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+            update(input)
+        end
+    end)
 end
-
--- Dragging
-do
-	local dragging = false
-	local dragStart, startPos
-	header.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = true
-			dragStart = input.Position
-			startPos = win.Position
-		end
-	end)
-	header.InputEnded:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			dragging = false
-		end
-	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if not dragging then return end
-		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-			local delta = input.Position - dragStart
-			win.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		end
-	end)
-end
-
--- Minimize behavior
-minimize.MouseButton1Click:Connect(function()
-	local screenSize = gui.AbsoluteSize
-	local targetPos = UDim2.new(1, -170, 0, 12)
-	TweenService:Create(win, TweenInfo.new(0.22), {
-		Size = UDim2.fromOffset(0,0),
-		Position = UDim2.new(targetPos.X.Scale, targetPos.X.Offset + 80, targetPos.Y.Scale, targetPos.Y.Offset + 16)
-	}):Play()
-	task.delay(0.22, function()
-		win.Visible = false
-		pill.Visible = true
-	end)
-end)
-
-pill.MouseButton1Click:Connect(function()
-	pill.Visible = false
-	win.Size = UDim2.fromOffset(420,330)
-	win.Position = UDim2.new(0.5,0,0.5,0)
-	win.Visible = true
-end)
-
--- Body
-local body = Instance.new("Frame")
-body.Size = UDim2.new(1, -24, 1, -36 - 24)
-body.Position = UDim2.new(0, 12, 0, 36 + 6)
-body.BackgroundTransparency = 1
-body.Parent = win
-
--- Status line
-local status = Instance.new("TextLabel")
-status.BackgroundTransparency = 1
-status.Size = UDim2.new(1,0,0,20)
-status.Position = UDim2.new(0,0,1,-20)
-status.Text = "Ready."
-status.TextColor3 = Color3.fromRGB(80,110,70)
-status.TextSize = 14
-status.Font = Enum.Font.Gotham
-status.Parent = win
-
-local function setStatus(txt)
-	status.Text = txt
-	print("[Pixiemo]", txt)
-end
-
--- Helpers
-local function makeButton(txt, posY)
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0, 360, 0, 40)
-	btn.Position = UDim2.new(0.5, -180, 0, posY)
-	btn.BackgroundColor3 = Color3.fromRGB(134,185,112)
-	btn.Text = txt
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.TextSize = 20
-	btn.Font = Enum.Font.GothamBold
-	btn.Parent = body
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,10); uc.Parent = btn
-	local st = Instance.new("UIStroke"); st.Color = Color3.fromRGB(80,110,70); st.Thickness=2; st.Parent = btn
-	tweenHover(btn, btn.Size)
-	return btn
-end
-
-local function makeToggleRow(label, posY)
-	local row = Instance.new("Frame")
-	row.Size = UDim2.new(0, 360, 0, 40)
-	row.Position = UDim2.new(0.5, -180, 0, posY)
-	row.BackgroundTransparency = 1
-	row.Parent = body
-
-	local tl = Instance.new("TextLabel")
-	tl.Size = UDim2.new(0.7, 0, 1, 0)
-	tl.BackgroundTransparency = 1
-	tl.Font = Enum.Font.GothamBold
-	tl.Text = label
-	tl.TextSize = 20
-	tl.TextColor3 = Color3.fromRGB(80,110,70)
-	tl.TextXAlignment = Enum.TextXAlignment.Left
-	tl.Parent = row
-
-	local btn = Instance.new("TextButton")
-	btn.Size = UDim2.new(0.25, 0, 0.7, 0)
-	btn.Position = UDim2.new(0.75, 0, 0.15, 0)
-	btn.Text = "OFF"
-	btn.Font = Enum.Font.GothamBold
-	btn.TextSize = 18
-	btn.TextColor3 = Color3.new(1,1,1)
-	btn.BackgroundColor3 = Color3.fromRGB(120,120,120)
-	btn.Parent = row
-
-	local uc = Instance.new("UICorner"); uc.CornerRadius = UDim.new(0,10); uc.Parent = btn
-	tweenHover(btn, btn.Size)
-
-	local on = false
-	local function setState(v)
-		on = v
-		btn.Text = on and "ON" or "OFF"
-		btn.BackgroundColor3 = on and Color3.fromRGB(80,200,120) or Color3.fromRGB(120,120,120)
-	end
-	return row, btn, function() return on end, setState
-end
-
----------------------------------------------------------------------
--- EGG ESP (works on any Model with "egg" in its name; updates live)
----------------------------------------------------------------------
-local eggRow, eggBtn, eggGet, eggSet = makeToggleRow("🍚 EGG ESP", 10)
-local activeEggs = {}    -- [Model] = Highlight
-
-local function isEggModel(inst)
-	return inst:IsA("Model") and inst.Name:lower():find("egg") ~= nil
-end
-
-local function addHighlight(m)
-	if activeEggs[m] then return end
-	local h = Instance.new("Highlight")
-	h.FillTransparency = 0.7
-	h.OutlineTransparency = 0
-	h.Parent = m
-	activeEggs[m] = h
-end
-
-local function removeHighlight(m)
-	local h = activeEggs[m]
-	if h then h:Destroy() end
-	activeEggs[m] = nil
-end
-
-local function rescanEggs()
-	for m,h in pairs(activeEggs) do
-		if not m or not m.Parent then
-			if h then h:Destroy() end
-			activeEggs[m] = nil
-		end
-	end
-	for _,d in ipairs(Workspace:GetDescendants()) do
-		if isEggModel(d) and eggGet() then
-			addHighlight(d)
-		end
-	end
-end
-
--- live updates when new things appear
-local descAddedConn
-local function enableEggESP()
-	eggSet(true); setStatus("EGG ESP ACTIVE")
-	rescanEggs()
-	descAddedConn = Workspace.DescendantAdded:Connect(function(d)
-		if eggGet() and isEggModel(d) then addHighlight(d) end
-	end)
-end
-
-local function disableEggESP()
-	eggSet(false); setStatus("EGG ESP INACTIVE")
-	if descAddedConn then descAddedConn:Disconnect() descAddedConn = nil end
-	for m,h in pairs(activeEggs) do
-		if h then h:Destroy() end
-	end
-	table.clear(activeEggs)
-end
-
-eggBtn.MouseButton1Click:Connect(function()
-	if eggGet() then disableEggESP() else enableEggESP() end
-end)
-
----------------------------------------------------------------------
--- Example “Not available yet” buttons (safe placeholders)
----------------------------------------------------------------------
-local btnRandomize = makeButton("🎲 Auto Randomize (placeholder)", 60)
-btnRandomize.MouseButton1Click:Connect(function()
-	setStatus("Auto Randomize requires game-specific remotes. Share paths to wire this.")
-end)
-
-local btnRarest = makeButton("💎 Auto Stop at Rarest (placeholder)", 110)
-btnRarest.MouseButton1Click:Connect(function()
-	setStatus("Rarest detection needs your rarity logic. I can hook it if you provide it.")
-end)
-
--- initial
-setStatus("Ready.")

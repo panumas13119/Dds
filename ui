@@ -17,7 +17,8 @@ gui.IgnoreGuiInset = true
 -- Main Panel
 local frame = Instance.new("Frame", gui)
 frame.Size = UDim2.new(0, 460, 0, 160)
-frame.Position = UDim2.new(0.5, -230, 0.5, -80)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.Position = UDim2.new(0.5, 0, 0.5, 0)
 frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 frame.BackgroundTransparency = 0.05
 frame.BorderSizePixel = 0
@@ -104,8 +105,8 @@ grad.Transparency = NumberSequence.new{
 	NumberSequenceKeypoint.new(1, 0.2)
 }
 
--- Animate Fill
-TweenService:Create(barFill, TweenInfo.new(5, Enum.EasingStyle.Sine), {
+-- Animate Fill (3 นาที = 60 วินาที)
+TweenService:Create(barFill, TweenInfo.new(60, Enum.EasingStyle.Sine), {
 	Size = UDim2.new(1, 0, 1, 0)
 }):Play()
 
@@ -115,25 +116,15 @@ sound.SoundId = "rbxassetid://9118823106"
 sound.Volume = 0.5
 sound:Play()
 
--- Optional: Star Particle Twinkle
---[[
-local particle = Instance.new("ParticleEmitter", frame)
-particle.Texture = "rbxassetid://243660364"
-particle.LightEmission = 1
-particle.Rate = 3
-particle.Lifetime = NumberRange.new(3)
-particle.Speed = NumberRange.new(0.5)
-particle.Size = NumberSequence.new(0.3)
-]]
-
--- Fade out and destroy
-task.delay(5, function()
+-- Fade out and destroy หลัง 60 วินาที
+task.delay(60, function()
 	TweenService:Create(frame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(title, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
 	TweenService:Create(loading, TweenInfo.new(0.5), {TextTransparency = 1}):Play()
 	TweenService:Create(barFill, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(barBg, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
 	TweenService:Create(shadow, TweenInfo.new(0.5), {ImageTransparency = 1}):Play()
+	TweenService:Create(blur, TweenInfo.new(0.5), {Size = 0}):Play()
 	wait(0.6)
 	blur:Destroy()
 	gui:Destroy()

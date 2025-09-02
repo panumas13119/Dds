@@ -1,0 +1,223 @@
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+
+local LP = Players.LocalPlayer
+local PlayerGui = LP:WaitForChild("PlayerGui")
+
+--// Small helper to ensure SetCore is ready
+local function waitForSetCore()
+    local ok = false
+    repeat
+        ok = pcall(function()
+            StarterGui:SetCore("SendNotification", { Title = " "; Text = " "; Duration = 0.01 })
+        end)
+        if not ok then task.wait(0.25) end
+    until ok
+end
+
+task.spawn(waitForSetCore)
+
+--// Simple notification queue (prevents overlap)
+local notifQueue = {}
+local isNotifying = false
+
+local function notify(title, text, duration)
+    table.insert(notifQueue, {Title = title, Text = text, Duration = duration or 4})
+    if isNotifying then return end
+    isNotifying = true
+    while #notifQueue > 0 do
+        local n = table.remove(notifQueue, 1)
+        pcall(function()
+            StarterGui:SetCore("SendNotification", n)
+        end)
+        task.wait(n.Duration + 0.05)
+    end
+    isNotifying = false
+end
+
+--// Gui factory helpers
+local function uiCorner(parent, r)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, r or 12)
+    c.Parent = parent
+    return c
+end
+
+local function uiStroke(parent, thickness, color)
+    local s = Instance.new("UIStroke")
+    s.Thickness = thickness or 1
+    s.Color = color or Color3.fromRGB(255,255,255)
+    s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    s.Parent = parent
+    return s
+end
+
+--// Root ScreenGui
+local gui = Instance.new("ScreenGui")
+gui.Name = "ADMTradeScamGUI"
+gui.IgnoreGuiInset = true
+gui.ResetOnSpawn = false
+gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+gui.Parent = PlayerGui
+
+--// Root container (outer)
+local outer = Instance.new("Frame")
+outer.Size = UDim2.fromOffset(308, 188)
+outer.Position = UDim2.new(0.5, -154, 0.5, -94)
+outer.BackgroundColor3 = Color3.fromRGB(0,0,0)
+outer.BorderSizePixel = 0
+outer.Parent = gui
+uiCorner(outer, 18)
+uiStroke(outer, 1, Color3.fromRGB(60,60,60))
+
+--// Inner panel
+local panel = Instance.new("Frame")
+panel.Size = UDim2.fromOffset(300, 180)
+panel.Position = UDim2.fromOffset(4, 4)
+panel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+panel.BorderSizePixel = 0
+panel.Parent = outer
+uiCorner(panel, 15)
+
+--// Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.Position = UDim2.fromOffset(0, 5)
+title.BackgroundTransparency = 1
+title.Text = "GAG TRADE SCAM"
+title.Font = Enum.Font.FredokaOne -- keep as in the original
+title.TextSize = 22
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.TextStrokeTransparency = 0.1
+title.TextStrokeColor3 = Color3.fromRGB(255,0,0)
+title.Parent = panel
+
+--// Subtitle / credit
+local credit = Instance.new("TextLabel")
+credit.Size = UDim2.new(1, 0, 0, 20)
+credit.Position = UDim2.fromOffset(0, 30)
+credit.BackgroundTransparency = 1
+credit.Text = "made by V3xado"
+credit.Font = Enum.Font.FredokaOne
+credit.TextSize = 18
+credit.TextColor3 = Color3.fromRGB(255,255,255)
+credit.TextStrokeTransparency = 0.1
+credit.TextStrokeColor3 = Color3.fromRGB(191,129,255)
+credit.Parent = panel
+
+--// Main button: Anti Ban Bypass (visual only)
+local bypassBtn = Instance.new("TextButton")
+bypassBtn.Size = UDim2.new(0.8, 0, 0, 40)
+bypassBtn.Position = UDim2.new(0.1, 0, 0, 60)
+bypassBtn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+bypassBtn.TextColor3 = Color3.fromRGB(255,255,255)
+bypassBtn.TextStrokeColor3 = Color3.fromRGB(255,255,255)
+bypassBtn.TextStrokeTransparency = 0.1
+bypassBtn.Font = Enum.Font.FredokaOne
+bypassBtn.TextSize = 22
+bypassBtn.Text = "ANTI BAN BYPASS ☠️"
+bypassBtn.AutoButtonColor = true
+bypassBtn.Parent = panel
+uiCorner(bypassBtn, 10)
+uiStroke(bypassBtn, 1, Color3.fromRGB(90,90,90))
+
+--// Info label
+local info = Instance.new("TextLabel")
+info.Size = UDim2.new(1, 0, 0, 20)
+info.Position = UDim2.fromOffset(0, 105)
+info.BackgroundTransparency = 1
+info.Text = "**Must be on trade before using!**"
+info.Font = Enum.Font.FredokaOne
+info.TextSize = 16
+info.TextColor3 = Color3.fromRGB(255,255,255)
+info.TextStrokeTransparency = 0.1
+info.TextStrokeColor3 = Color3.fromRGB(120,120,120)
+info.Parent = panel
+
+--// Buttons: ON / OFF
+local onBtn = Instance.new("TextButton")
+onBtn.Size = UDim2.fromOffset(100, 40)
+onBtn.Position = UDim2.new(0.12, 0, 1, -45)
+onBtn.BackgroundColor3 = Color3.fromRGB(200,200,200)
+onBtn.TextColor3 = Color3.fromRGB(255,255,255)
+onBtn.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+onBtn.TextStrokeTransparency = 0.1
+onBtn.Font = Enum.Font.FredokaOne
+onBtn.TextSize = 24
+onBtn.Text = "ON"
+onBtn.Parent = panel
+uiCorner(onBtn, 15)
+
+local offBtn = Instance.new("TextButton")
+offBtn.Size = UDim2.fromOffset(100, 40)
+offBtn.Position = UDim2.new(0.55, 0, 1, -45)
+offBtn.BackgroundColor3 = Color3.fromRGB(200,200,200)
+offBtn.TextColor3 = Color3.fromRGB(255,255,255)
+offBtn.TextStrokeColor3 = Color3.fromRGB(0,0,0)
+offBtn.TextStrokeTransparency = 0.1
+offBtn.Font = Enum.Font.FredokaOne
+offBtn.TextSize = 24
+offBtn.Text = "OFF"
+offBtn.Parent = panel
+uiCorner(offBtn, 15)
+
+--// Button logic
+bypassBtn.MouseButton1Click:Connect(function()
+    notify("Bypass Ban Activated", "Bypass Any Ban! (visual notification only)", 4)
+end)
+
+onBtn.MouseButton1Click:Connect(function()
+    -- Keep original phrasing but ensure "Activated" shows clearly
+    notify("Freeze Trade: Activated", "You can now click accept!", 4)
+end)
+
+offBtn.MouseButton1Click:Connect(function()
+    notify("Script Turned Off", "Script is now off.", 4)
+end)
+
+--// Smooth drag for the window (works on mouse and touch)
+do
+    local dragging = false
+    local dragStart, startPos
+
+    local function update(input)
+        if not dragging or not dragStart or not startPos then return end
+        local delta = input.Position - dragStart
+        outer.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
+
+    outer.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = outer.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    outer.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+            update(input)
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+            update(input)
+        end
+    end)
+end

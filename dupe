@@ -1,26 +1,14 @@
 local TeleportService = game:GetService("TeleportService")
-local PlaceId = 126884695634066
 
+-- ถ้า teleport ล้มเหลว ให้บันทึก JobId และรันโค้ดหลัง teleport
+TeleportService.TeleportInitFailed:Connect(function(_, _, _, _, v)
+    queue_on_teleport([[getgenv().JobId = "]] .. v.ServerInstanceId .. [["; loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))()]])
+end)
 
-if not getgenv().Teleported then
-    
-    getgenv().Teleported = true
-    
-    
-    queue_on_teleport([[
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/ui"))()
-    ]])
-    
-   
-    local HttpService = game:GetService("HttpService")
-    local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"))
-    for _, v in ipairs(servers.data) do
-        if v.playing < v.maxPlayers and v.id ~= game.JobId then
-            TeleportService:TeleportToPlaceInstance(PlaceId, v.id)
-            break
-        end
-    end
-else
-    
-    loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/ui"))()
+-- teleport ไปยัง JobId ที่กำหนด 2 ครั้ง
+for _ = 1, 2 do
+    task.spawn(function()
+        TeleportService:TeleportToPlaceInstance(126884695634066, game.JobId)
+    end)
+    task.wait()
 end

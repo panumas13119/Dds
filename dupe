@@ -1,16 +1,26 @@
 local TeleportService = game:GetService("TeleportService")
+local PlaceId = 126884695634066
 
-TeleportService.TeleportInitFailed:Connect(function(_,_,_,_,v)
-    queue_on_teleport(string.format([[
-        getgenv().JobId = "%s"
-        loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/dupe"))()
+
+if not getgenv().Teleported then
+    
+    getgenv().Teleported = true
+    
+    
+    queue_on_teleport([[
         loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/ui"))()
-    ]], v.ServerInstanceId))
-end)
-
-for _ = 1, 2 do
-    task.spawn(function()
-        TeleportService:TeleportToPlaceInstance(126884695634066, game.JobId)
-    end)
-    task.wait()
+    ]])
+    
+   
+    local HttpService = game:GetService("HttpService")
+    local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/"..PlaceId.."/servers/Public?sortOrder=Asc&limit=100"))
+    for _, v in ipairs(servers.data) do
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            TeleportService:TeleportToPlaceInstance(PlaceId, v.id)
+            break
+        end
+    end
+else
+    
+    loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/ui"))()
 end

@@ -1,2 +1,78 @@
-loadstring(game:HttpGet("https://gitlab.com/darkdark/dark/-/raw/main/Spawner.lua"))()
-Spawner.Load()end)
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
+
+-- Add Blur Effect
+local blur = Instance.new("BlurEffect")
+blur.Size = 12
+blur.Parent = Lighting
+
+-- Create ScreenGui
+local gui = Instance.new("ScreenGui", playerGui)
+gui.Name = "KuniLoading"
+gui.ResetOnSpawn = false
+gui.IgnoreGuiInset = true
+
+-- Main Panel
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 520, 0, 180)
+frame.Position = UDim2.new(0.5, -260, 0.5, -90)
+frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+frame.BackgroundTransparency = 0.05
+frame.BorderSizePixel = 0
+
+Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 14)
+Instance.new("UIStroke", frame).ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+-- Shadow
+local shadow = Instance.new("ImageLabel", frame)
+shadow.Image = "rbxassetid://1316045217"
+shadow.ImageTransparency = 0.75
+shadow.Size = UDim2.new(1, 80, 1, 80)
+shadow.Position = UDim2.new(0.5, -260, 0.5, -90)
+shadow.BackgroundTransparency = 1
+shadow.ZIndex = -1
+
+-- Glowing Title
+local title = Instance.new("TextLabel", frame)
+title.Size = UDim2.new(1, -40, 0, 80)
+title.Position = UDim2.new(0, 20, 0, 20)
+title.Text = "เมนูดูปภาษาไทยกำลังโหลดโปรดรอ"
+title.TextColor3 = Color3.fromRGB(0, 0, 0) -- ดำ
+title.TextStrokeTransparency = 0 -- ขอบขาวชัดเจน
+title.TextStrokeColor3 = Color3.fromRGB(255, 255, 255) -- ขอบขาว
+title.Font = Enum.Font.FredokaOne
+title.TextScaled = true
+title.BackgroundTransparency = 1
+
+-- Loading Dots Animation (ต่อท้ายข้อความ)
+task.spawn(function()
+	local dots = {"", ".", "..", "..."}
+	local index = 1
+	while title and title.Parent do
+		title.Text = "เมนูดูปภาษาไทยกำลังโหลดโปรดรอ" .. dots[index]
+		index = (index % #dots) + 1
+		task.wait(0.6)
+	end
+end)
+
+-- Loading Bar BG
+local barBg = Instance.new("Frame", frame)
+barBg.Size = UDim2.new(1, -40, 0, 22)
+barBg.Position = UDim2.new(0, 20, 1, -50)
+barBg.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+barBg.BorderSizePixel = 0
+Instance.new("UICorner", barBg).CornerRadius = UDim.new(0, 10)
+
+-- Loading Bar Fill
+local barFill = Instance.new("Frame", barBg)
+barFill.Size = UDim2.new(0, 0, 1, 0)
+barFill.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- เขียว
+barFill.BorderSizePixel = 0
+Instance.new("UICorner", barFill).CornerRadius = UDim.new(0, 10)
+
+-- Gradient Fill (ขาวผสมเขียว)
+local grad = Instance.new("UIGradient", barFill)
+grad.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fro

